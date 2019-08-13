@@ -1,10 +1,8 @@
 import { Module, DynamicModule } from "@nestjs/common";
 import { ScannerService } from "./scanner.service";
 import { createProvider } from "./scanner.provider";
-@Module({
-    providers: [ScannerService],
-    exports: [ScannerService]
-})
+
+@Module({})
 export class ScannerModule {
     static forRoot(): DynamicModule {
         return {
