@@ -2,7 +2,8 @@ import { Injectable, Inject } from "@nestjs/common";
 import { Module } from "@nestjs/core/injector/module";
 import { ModulesContainer } from "@nestjs/core/injector/modules-container";
 import { isFunction, isConstructor } from "@nestjs/common/utils/shared.utils";
-import { SCANNER_UUID } from "./scanner.constants";
+import { SCANNER_OPTIONS } from "./scanner.constants";
+import { ScannerOptions } from "./scanner.interface";
 
 function getMethodNames(prototype: any) {
     const methodNames = Object.getOwnPropertyNames(prototype).filter(prop => {
@@ -18,7 +19,8 @@ function getMethodNames(prototype: any) {
 @Injectable()
 export class ScannerService {
     constructor(
-        @Inject(SCANNER_UUID) readonly uuid: any, // 无用参数, 只为保证每个模块都需要有自己的Service
+        @Inject(SCANNER_OPTIONS)
+        private readonly options: ScannerOptions,
         private readonly modulesContainer: ModulesContainer
     ) {}
 
@@ -41,7 +43,7 @@ export class ScannerService {
         throw new Error("Not found root Module!");
     }
 
-    scanController(cb: (instance: any) => void, global = true) {
+    scanController(cb: (instance: any) => void) {
         const scanModuleController = ({ controllers }) => {
             controllers.forEach(({ instance }) => {
                 if (instance && typeof instance === "object") {
@@ -49,7 +51,7 @@ export class ScannerService {
                 }
             });
         };
-        if (global) {
+        if (this.options.global) {
             this.modulesContainer.forEach(scanModuleController);
         } else {
             const rootModule = this.getRootModule();
@@ -57,7 +59,7 @@ export class ScannerService {
         }
     }
 
-    scanProvider(cb: (instance: any) => void, global = true) {
+    scanProvider(cb: (instance: any) => void) {
         const scanModuleProvider = ({ providers }) => {
             providers.forEach(({ instance }) => {
                 if (instance && typeof instance === "object") {
@@ -65,7 +67,7 @@ export class ScannerService {
                 }
             });
         };
-        if (global) {
+        if (this.options.global) {
             this.modulesContainer.forEach(scanModuleProvider);
         } else {
             const rootModule = this.getRootModule();
@@ -75,8 +77,7 @@ export class ScannerService {
 
     scanControllerPropertyMetadates(
         metaKey: string | string[],
-        cb: (instance: any, propertyKey: string, metadata: any, metaKey: string) => void,
-        global = true
+        cb: (instance: any, propertyKey: string, metadata: any, metaKey: string) => void
     ) {
         const metaKeys = typeof metaKey == "string" ? [metaKey] : metaKey;
         this.scanController(instance => {
@@ -88,14 +89,10 @@ export class ScannerService {
                     }
                 }
             }
-        }, global);
+        });
     }
 
-    scanProviderPropertyMetadates(
-        metaKey: string | string[],
-        cb: (instance: any, propertyKey: string, metadata: any, metaKey: string) => void,
-        global = true
-    ) {
+    scanProviderPropertyMetadates(metaKey: string | string[], cb: (instance: any, propertyKey: string, metadata: any, metaKey: string) => void) {
         const metaKeys = typeof metaKey == "string" ? [metaKey] : metaKey;
         this.scanProvider(instance => {
             for (const propertyKey in instance) {
@@ -106,14 +103,10 @@ export class ScannerService {
                     }
                 }
             }
-        }, global);
+        });
     }
 
-    scanControllerMethodMetadates(
-        metaKey: string | string[],
-        cb: (instance: any, methodName: string, metadata: any, metaKey: string) => void,
-        global = true
-    ) {
+    scanControllerMethodMetadates(metaKey: string | string[], cb: (instance: any, methodName: string, metadata: any, metaKey: string) => void) {
         const metaKeys = typeof metaKey == "string" ? [metaKey] : metaKey;
         this.scanController(instance => {
             const prototype = Object.getPrototypeOf(instance);
@@ -127,14 +120,10 @@ export class ScannerService {
                     }
                 }
             }
-        }, global);
+        });
     }
 
-    scanProviderMethodMetadates(
-        metaKey: string | string[],
-        cb: (instance: any, methodName: string, metadata: any, metaKey: string) => void,
-        global = true
-    ) {
+    scanProviderMethodMetadates(metaKey: string | string[], cb: (instance: any, methodName: string, metadata: any, metaKey: string) => void) {
         const metaKeys = typeof metaKey == "string" ? [metaKey] : metaKey;
         this.scanProvider(instance => {
             const prototype = Object.getPrototypeOf(instance);
@@ -148,6 +137,6 @@ export class ScannerService {
                     }
                 }
             }
-        }, global);
+        });
     }
 }

@@ -1,10 +1,14 @@
 import { Provider } from "@nestjs/common";
 import { v4 } from "uuid";
-import { SCANNER_UUID } from "./scanner.constants";
+import { SCANNER_OPTIONS } from "./scanner.constants";
+import { ScannerOptions } from "./scanner.interface";
 
-export function createProvider(): Provider {
+export function createProvider(global: boolean): Provider<ScannerOptions> {
     return {
-        provide: SCANNER_UUID,
-        useValue: v4()
+        provide: SCANNER_OPTIONS,
+        useValue: {
+            uuid: v4(),
+            global: global
+        }
     };
 }

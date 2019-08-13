@@ -1,1 +1,1 @@
-export const SCANNER_UUID = Symbol("SCANNER_UUID");
+export const SCANNER_OPTIONS = Symbol("SCANNER_OPTIONS");
