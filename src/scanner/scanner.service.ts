@@ -43,11 +43,12 @@ export class ScannerService {
         throw new Error("Not found root Module!");
     }
 
-    scanController(cb: (instance: any) => void) {
+    async scanController(cb: (instance: any) => any) {
+        const instances: any[] = [];
         const scanModuleController = ({ controllers }) => {
             controllers.forEach(({ instance }) => {
                 if (instance && typeof instance === "object") {
-                    cb(instance);
+                    instances.push(instance);
                 }
             });
         };
@@ -57,13 +58,17 @@ export class ScannerService {
             const rootModule = this.getRootModule();
             scanModuleController(rootModule);
         }
+        for (const instance of instances) {
+            await cb(instance);
+        }
     }
 
-    scanProvider(cb: (instance: any) => void) {
+    async scanProvider(cb: (instance: any) => any) {
+        const instances: any[] = [];
         const scanModuleProvider = ({ providers }) => {
             providers.forEach(({ instance }) => {
                 if (instance && typeof instance === "object") {
-                    cb(instance);
+                    instances.push(instance);
                 }
             });
         };
@@ -73,42 +78,51 @@ export class ScannerService {
             const rootModule = this.getRootModule();
             scanModuleProvider(rootModule);
         }
+        for (const instance of instances) {
+            await cb(instance);
+        }
     }
 
-    scanControllerPropertyMetadates(
+    async scanControllerPropertyMetadates(
         metaKey: string | string[],
-        cb: (instance: any, propertyKey: string, metadata: any, metaKey: string) => void
+        cb: (instance: any, propertyKey: string, metadata: any, metaKey: string) => any
     ) {
         const metaKeys = typeof metaKey == "string" ? [metaKey] : metaKey;
-        this.scanController(instance => {
+        await this.scanController(async instance => {
             for (const propertyKey in instance) {
                 for (const key of metaKeys) {
                     const metadata = Reflect.getMetadata(key, instance, propertyKey);
                     if (metadata) {
-                        cb(instance, propertyKey, metadata, key);
+                        await cb(instance, propertyKey, metadata, key);
                     }
                 }
             }
         });
     }
 
-    scanProviderPropertyMetadates(metaKey: string | string[], cb: (instance: any, propertyKey: string, metadata: any, metaKey: string) => void) {
+    async scanProviderPropertyMetadates(
+        metaKey: string | string[],
+        cb: (instance: any, propertyKey: string, metadata: any, metaKey: string) => any
+    ) {
         const metaKeys = typeof metaKey == "string" ? [metaKey] : metaKey;
-        this.scanProvider(instance => {
+        await this.scanProvider(async instance => {
             for (const propertyKey in instance) {
                 for (const key of metaKeys) {
                     const metadata = Reflect.getMetadata(key, instance, propertyKey);
                     if (metadata) {
-                        cb(instance, propertyKey, metadata, key);
+                        await cb(instance, propertyKey, metadata, key);
                     }
                 }
             }
         });
     }
 
-    scanControllerMethodMetadates(metaKey: string | string[], cb: (instance: any, methodName: string, metadata: any, metaKey: string) => void) {
+    async scanControllerMethodMetadates(
+        metaKey: string | string[],
+        cb: (instance: any, methodName: string, metadata: any, metaKey: string) => any
+    ) {
         const metaKeys = typeof metaKey == "string" ? [metaKey] : metaKey;
-        this.scanController(instance => {
+        await this.scanController(async instance => {
             const prototype = Object.getPrototypeOf(instance);
             const methodNames = getMethodNames(prototype);
             for (const methodName of methodNames) {
@@ -116,16 +130,19 @@ export class ScannerService {
                 for (const key of metaKeys) {
                     const metadata = Reflect.getMetadata(key, targetCallback);
                     if (metadata) {
-                        cb(instance, methodName, metadata, key);
+                        await cb(instance, methodName, metadata, key);
                     }
                 }
             }
         });
     }
 
-    scanProviderMethodMetadates(metaKey: string | string[], cb: (instance: any, methodName: string, metadata: any, metaKey: string) => void) {
+    async scanProviderMethodMetadates(
+        metaKey: string | string[],
+        cb: (instance: any, methodName: string, metadata: any, metaKey: string) => any
+    ) {
         const metaKeys = typeof metaKey == "string" ? [metaKey] : metaKey;
-        this.scanProvider(instance => {
+        await this.scanProvider(async instance => {
             const prototype = Object.getPrototypeOf(instance);
             const methodNames = getMethodNames(prototype);
             for (const methodName of methodNames) {
@@ -133,7 +150,7 @@ export class ScannerService {
                 for (const key of metaKeys) {
                     const metadata = Reflect.getMetadata(key, targetCallback);
                     if (metadata) {
-                        cb(instance, methodName, metadata, key);
+                        await cb(instance, methodName, metadata, key);
                     }
                 }
             }
