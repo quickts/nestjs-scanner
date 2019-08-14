@@ -41,5 +41,8 @@
   "bugs": {
     "url": "https://github.com/quickts/nestjs-scanner/issues"
   },
-  "homepage": "https://github.com/quickts/nestjs-scanner#readme"
+  "homepage": "https://github.com/quickts/nestjs-scanner#readme",
+  "files": [
+    "dist"
+  ]
 }
